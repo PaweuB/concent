@@ -1,5 +1,6 @@
 from base64 import b64encode
 from typing import List
+from typing import Optional
 import datetime
 import functools
 import mock
@@ -136,7 +137,7 @@ class ConcentIntegrationTestCase(TestCase):
         task_to_compute = None,
         size: int = 1,
         package_hash: str = 'sha1:4452d71687b6bc2c9389c3349fdc17fbd73b833b',
-        timestamp: int = None,
+        timestamp: Optional[str] = None,
     ):
         """ Returns ReportComputedTask deserialized. """
         with freeze_time(timestamp or self._get_timestamp_string()):
@@ -154,7 +155,7 @@ class ConcentIntegrationTestCase(TestCase):
 
     def _get_deserialized_task_to_compute(
         self,
-        timestamp: int = None,
+        timestamp: Optional[str] = None,
         deadline = None,
         task_id: str = '1',
         subtask_id: str = '2',
