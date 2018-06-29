@@ -3,7 +3,6 @@ import logging
 from celery import shared_task
 from mypy.types import Optional
 
-from django.conf import settings
 from django.db import DatabaseError
 from django.db import transaction
 
@@ -19,6 +18,7 @@ from utils.decorators import provides_concent_feature
 from utils.helpers import deserialize_message
 from utils.helpers import get_current_utc_timestamp
 from utils.helpers import parse_timestamp_to_utc_datetime
+from core.utils import calculate_subtask_verification_time
 from .constants import CELERY_LOCKED_SUBTASK_DELAY
 from .constants import MAXIMUM_VERIFICATION_RESULT_TASK_RETRIES
 from .constants import VERIFICATION_RESULT_SUBTASK_STATE_ACCEPTED_LOG_MESSAGE
@@ -74,7 +74,7 @@ def upload_finished(subtask_id: str):
         update_subtask_state(
             subtask=subtask,
             state=Subtask.SubtaskState.ADDITIONAL_VERIFICATION.name,  # pylint: disable=no-member
-            next_deadline=int(subtask.next_deadline.timestamp()) + settings.SUBTASK_VERIFICATION_TIME
+            next_deadline=int(subtask.next_deadline.timestamp()) + calculate_subtask_verification_time(report_computed_task)
         )
 
         # Add upload_acknowledged task to the work queue.
