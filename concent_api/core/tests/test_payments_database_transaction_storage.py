@@ -9,11 +9,6 @@ from core.models import PendingEthereumTransaction
 from core.payments.storage import DatabaseTransactionsStorage
 
 
-class ConcentRPCMock:
-    def get_transaction_count(self):
-        return 5
-
-
 class DatabaseTransactionsStorageTest(TestCase):
 
     multi_db = True
@@ -21,7 +16,7 @@ class DatabaseTransactionsStorageTest(TestCase):
     def setUp(self):
         super().setUp()
 
-        with mock.patch('core.payments.storage.ConcentRPC', side_effect=ConcentRPCMock):
+        with mock.patch('core.payments.storage.core.payments.base.get_transaction_count', return_value=5):
             self.storage = DatabaseTransactionsStorage()
 
         self.global_transaction_state = GlobalTransactionState.objects.get(pk=0)

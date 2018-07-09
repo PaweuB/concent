@@ -9,7 +9,7 @@ from golem_messages.utils import encode_hex
 
 from django.db import transaction
 
-from common.singleton import ConcentRPC
+import core.payments.base
 from core.models import GlobalTransactionState
 from core.models import PendingEthereumTransaction
 
@@ -27,10 +27,9 @@ class DatabaseTransactionsStorage():
         super().__init__(*args, **kwargs)
 
         if not GlobalTransactionState.objects.filter(pk=0).exists():
-            concent_rpc = ConcentRPC()
             global_transaction_state = GlobalTransactionState(
                 pk=0,
-                nonce=concent_rpc.get_transaction_count(),  # TODO: Get it via backend
+                nonce=core.payments.base.get_transaction_count(),
             )
             global_transaction_state.full_clean()
             global_transaction_state.save()
