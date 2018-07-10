@@ -1,8 +1,12 @@
 from functools                      import wraps
 from logging                        import getLogger
+import threading
+from threading import Thread
+import time
 import traceback
 
-from django.db                      import transaction
+from django.db import transaction, IntegrityError, DatabaseError
+from django.db.transaction import TransactionManagementError
 from django.http                    import JsonResponse
 from django.http                    import HttpResponse
 from django.http                    import HttpResponseNotAllowed
@@ -29,6 +33,7 @@ from common.logging import log_json_message
 from common.logging import log_message_received_in_endpoint
 from common.logging import log_string_message
 from common.shortcuts import load_without_public_key
+from core.exceptions import Http400
 from core.validation import get_validated_client_public_key_from_client_message
 from core.validation import is_golem_message_signed_with_key
 

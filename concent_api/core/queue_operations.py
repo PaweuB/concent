@@ -1,6 +1,6 @@
 from golem_messages.message.tasks import ComputeTaskDef
 
-from conductor.tasks import blender_verification_request
+from conductor.tasks import blender_verification_request, example_task_function
 from common.helpers import get_storage_result_file_path
 from common.helpers import get_storage_source_file_path
 
@@ -30,3 +30,11 @@ def send_blender_verification_request(compute_task_def: ComputeTaskDef, verifica
         frames=frames,
         blender_crop_script=blender_crop_script,
     )
+
+
+def test_shortcut(
+        subtask_id: str,
+        test_variable1: str
+    ):
+    print('przed odpaleniem example_task_function')
+    example_task_function.delay(subtask_id, test_variable1)

@@ -14,6 +14,7 @@ from golem_messages.factories       import tasks
 from golem_messages.shortcuts       import dump
 from golem_messages.shortcuts       import load
 
+from core.message_handlers import store_subtask
 from core.models                    import Client
 from core.models                    import StoredMessage
 from core.models                    import PendingResponse
@@ -86,6 +87,37 @@ class CoreViewSendTest(ConcentIntegrationTestCase):
             task_to_compute=task_to_compute,
             reason=message.RejectReportComputedTask.REASON.SubtaskTimeLimitExceeded,
         )
+
+    @freeze_time("2017-11-17 10:00:00")
+    def test_multiprocess_test_view_should_accept_valid_message(self):
+
+        store_subtask(
+            task_id=self.task_to_compute.compute_task_def['task_id'],
+            subtask_id=self.task_to_compute.compute_task_def['subtask_id'],
+            provider_public_key=self.PROVIDER_PUBLIC_KEY,
+            requestor_public_key=self.REQUESTOR_PUBLIC_KEY,
+            state=Subtask.SubtaskState.FORCING_REPORT,
+            next_deadline=int(self.task_to_compute.compute_task_def['deadline']),
+            task_to_compute=self.task_to_compute,
+            report_computed_task=self.report_computed_task,
+        )
+
+
+
+
+
+
+
+        self.client.post(
+            reverse('core:multiprocess_test_view'),
+            data = dump(
+                self.correct_golem_data,
+                PROVIDER_PRIVATE_KEY,
+                CONCENT_PUBLIC_KEY),
+            content_type                        = 'application/octet-stream',
+        )
+
+
 
     @freeze_time("2017-11-17 10:00:00")
     def test_send_should_accept_valid_message(self):

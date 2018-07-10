@@ -1,11 +1,14 @@
 import logging
+import time
 from typing import List
 
 from celery import shared_task
 from mypy.types import Optional
 from django.db import transaction
 
+from common.multiprocess_utils import ensure_retry_of_locked_calls
 from core import tasks
+from core.models import Subtask
 from core.validation import validate_frames
 from common.constants import ErrorCode
 from common.decorators import log_task_errors
@@ -24,9 +27,26 @@ from .models import VerificationRequest
 logger = logging.getLogger(__name__)
 
 
+
+@shared_task
+@ensure_retry_of_locked_calls
+@log_task_errors
+@transaction.atomic(using='control')
+def example_task_function(
+        subtask_id: str,
+        test_variable1: str
+):
+    print('         example_task_function, BEFORE select_for_update')
+    Subtask.objects.select_for_update(nowait=True).get(subtask_id=subtask_id)
+    print('example_task_function, after select_for_update')
+    time.sleep(2)
+
+
+
 @shared_task
 @provides_concent_feature('conductor-worker')
 @log_task_errors
+# @ensure_retry_of_locked_calls
 @transaction.atomic(using='storage')
 def blender_verification_request(
     subtask_id: str,
@@ -38,6 +58,11 @@ def blender_verification_request(
     frames: List[int],
     blender_crop_script: Optional[str],
 ):
+    with transaction.atomic():
+        Subtask.objects.select_for_update(nowait=True).get(subtask_id = subtask_id)
+
+    print('po pobraniu subtask')
+
     log_string_message(
         logger,
         f'Blender verification request starts. SUBTASK_ID: {subtask_id}',

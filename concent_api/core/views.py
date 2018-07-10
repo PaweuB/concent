@@ -1,5 +1,8 @@
 from logging import getLogger
+import time
+
 from django.conf                    import settings
+from django.db import transaction
 from django.http                    import JsonResponse
 from django.views.decorators.csrf   import csrf_exempt
 from django.views.decorators.http   import require_POST
@@ -7,6 +10,7 @@ from django.views.decorators.http   import require_GET
 
 from core.message_handlers          import handle_message
 from core.message_handlers          import handle_messages_from_database
+from core.queue_operations import test_shortcut
 from core.subtask_helpers           import update_timed_out_subtasks
 from common                          import logging
 from common.decorators import handle_errors_and_responses
@@ -14,7 +18,7 @@ from common.decorators import log_communication
 from common.decorators import provides_concent_feature
 from common.decorators               import require_golem_auth_message
 from common.decorators               import require_golem_message
-from .models                        import PendingResponse
+from .models import PendingResponse, Subtask
 
 logger = getLogger(__name__)
 
@@ -37,8 +41,26 @@ def send(_request, client_message, client_public_key):
         client_message,
         client_public_key,
     )
-
     return handle_message(client_message)
+
+
+# @provides_concent_feature('concent-api')
+# @csrf_exempt
+# @require_POST
+# @require_golem_message
+# @handle_errors_and_responses(database_name='control')
+# @log_communication
+def multiprocess_test_view(_request, client_message):
+    subtask_id='1'
+
+    # example_task_function(subtask_id, 'aaa')
+
+    for _ in range(4):
+        test_shortcut(subtask_id, 'aaa')
+    time.sleep(1)
+    print('end of view')
+
+
 
 
 @provides_concent_feature('concent-api')
@@ -86,3 +108,5 @@ def protocol_constants(_request):
             'concent_upload_rate': settings.CONCENT_UPLOAD_RATE,
         }
     )
+
+

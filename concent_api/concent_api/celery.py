@@ -28,5 +28,6 @@ app.conf.task_routes = ([
     ('conductor.tasks.blender_verification_request', {'queue': 'conductor'}),
     ('conductor.tasks.upload_acknowledged', {'queue': 'conductor'}),
     ('verifier.tasks.blender_verification_order', {'queue': 'verifier'}),
+    ('conductor.tasks.example_task_function', {'queue': 'concent'}),
 ],)
 app.conf.task_default_queue = 'concent'

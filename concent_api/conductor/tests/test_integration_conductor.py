@@ -1,3 +1,11 @@
+import threading
+from threading import Thread
+import time
+from unittest import TestCase
+
+from django.core.management import BaseCommand
+from django.db import connection, IntegrityError
+from django.test import TransactionTestCase
 import mock
 
 from django.urls    import reverse
@@ -5,6 +13,7 @@ from django.urls    import reverse
 from common.helpers import get_current_utc_timestamp
 from common.helpers import get_storage_result_file_path
 from common.helpers import get_storage_source_file_path
+from common.testing_helpers import generate_ecc_key_pair, generate_priv_and_pub_eth_account_key
 from core.message_handlers import store_subtask
 from core.models import Subtask
 from core.tests.utils import ConcentIntegrationTestCase
@@ -12,6 +21,7 @@ from ..models       import BlenderSubtaskDefinition
 from ..models       import UploadReport
 from ..models       import VerificationRequest
 from ..tasks        import blender_verification_request
+from django.conf import settings
 
 
 class ConductorVerificationIntegrationTest(ConcentIntegrationTestCase):
@@ -374,3 +384,114 @@ class ConductorVerificationIntegrationTest(ConcentIntegrationTestCase):
             )
 
         mock_task.assert_called_with(self.compute_task_def['subtask_id'])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class BlenderVerificationRequestParallelTest(ConcentIntegrationTestCase):
+
+    def __init__(self):
+        super().__init__()
+
+        (self.PROVIDER_PRIVATE_KEY, self.PROVIDER_PUBLIC_KEY) = generate_ecc_key_pair()
+        (self.REQUESTOR_PRIVATE_KEY, self.REQUESTOR_PUBLIC_KEY) = generate_ecc_key_pair()
+        (self.PROVIDER_PRIV_ETH_KEY, self.PROVIDER_PUB_ETH_KEY) = generate_priv_and_pub_eth_account_key()
+        (self.REQUESTOR_PRIV_ETH_KEY, self.REQUESTOR_PUB_ETH_KEY) = generate_priv_and_pub_eth_account_key()
+
+        self.task_to_compute = self._get_deserialized_task_to_compute()
+        self.compute_task_def = self.task_to_compute.compute_task_def
+        self.source_package_path = get_storage_source_file_path(
+            self.task_to_compute.subtask_id,
+            self.task_to_compute.task_id,
+        )
+        self.result_package_path = get_storage_result_file_path(
+            self.task_to_compute.subtask_id,
+            self.task_to_compute.task_id,
+        )
+        self.report_computed_task = self._get_deserialized_report_computed_task(task_to_compute=self.task_to_compute)
+
+        store_subtask(
+            task_id=self.compute_task_def['task_id'],
+            subtask_id=self.compute_task_def['subtask_id'],
+            provider_public_key=self.PROVIDER_PUBLIC_KEY,
+            requestor_public_key=self.REQUESTOR_PUBLIC_KEY,
+            state=Subtask.SubtaskState.REPORTED,
+            task_to_compute=self.report_computed_task.task_to_compute,
+            report_computed_task=self.report_computed_task,
+            next_deadline=None
+        )
+
+    def run_blender_verification_request(self):
+        blender_verification_request(
+            frames=self.compute_task_def['extra_data']['frames'],
+            subtask_id=self.compute_task_def['subtask_id'],
+            source_package_path=self.source_package_path,
+            result_package_path=self.result_package_path,
+            output_format=BlenderSubtaskDefinition.OutputFormat.JPG.name,  # pylint: disable=no-member
+            scene_file=self.compute_task_def['extra_data']['scene_file'],
+            verification_deadline=self._get_verification_deadline_as_timestamp(
+                get_current_utc_timestamp(),
+                self.report_computed_task.task_to_compute,
+            ),
+            blender_crop_script=self.compute_task_def['extra_data']['script_src'],
+        )
+
+
+class DatabaseHandler(BaseCommand):   # pylint: disable=abstract-method
+
+    def deactivate_communication_with_database(self):  # pylint: disable=abstract-method, no-self-use
+        cursor = connection.cursor()
+        database_name = f"{settings.DATABASES['control']['NAME']}"
+        database_name = f"{settings.DATABASES['storage']['NAME']}"
+
+        cursor.execute(
+            "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity "
+            "WHERE pg_stat_activity.datname = %s AND pid <> pg_backend_pid();", [database_name])
+
+
+
+
+
+
+class TestEnsureRetryOfLockedCalls(ConcentIntegrationTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.hepler = BlenderVerificationRequestParallelTest()
+
+    def test_that_ensure_retry_of_locked_calls_should_handle_multiprocessing_calls(self):
+        # self.hepler.run_blender_verification_request()
+
+
+        for i in range(3):  # pylint: disable=unused-variable
+            t = Thread(target=self.hepler.run_blender_verification_request, args=())
+            t.start()
+
+
+        # with self.assertRaises(IntegrityError)
+
+        time.sleep(10)
+        # self.assertEqual(threading.active_count(), 1)
+        database_handler = DatabaseHandler()
+        database_handler.deactivate_communication_with_database()
+
+
