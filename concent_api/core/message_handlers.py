@@ -120,6 +120,10 @@ def handle_send_ack_report_computed_task(client_message):
 
     validate_task_to_compute(task_to_compute)
     validate_golem_message_signed_with_key(
+        report_computed_task,
+        provider_public_key,
+    )
+    validate_golem_message_signed_with_key(
         task_to_compute,
         requestor_public_key,
     )

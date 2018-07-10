@@ -179,10 +179,6 @@ class AuthReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
 
         self._test_400_response(
             response,
-            error_message='There was an exception when validating if golem_message {} is signed with public key {}'.format(
-                message.TaskToCompute.TYPE,
-                self.REQUESTOR_PUBLIC_KEY,
-            ),
             error_code=ErrorCode.MESSAGE_SIGNATURE_WRONG,
         )
 
@@ -211,7 +207,6 @@ class AuthReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
 
         self._test_400_response(
             response,
-            error_message = "Subtask requestor key does not match current client key. Can't accept your 'AckReportComputedTask'.",
             error_code=ErrorCode.QUEUE_REQUESTOR_PUBLIC_KEY_MISMATCH,
         )
 
@@ -224,11 +219,13 @@ class AuthReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
             self.REQUESTOR_PRIVATE_KEY,
         )
 
+        report_computed_task_from_provider = self._get_deserialized_report_computed_task(
+            timestamp="2017-12-01 10:55:00",
+            task_to_compute=task_to_compute,
+        )
         with freeze_time("2017-12-01 11:00:05"):
             ack_report_computed_task = message.AckReportComputedTask(
-                report_computed_task=message.ReportComputedTask(
-                    task_to_compute=task_to_compute,
-                )
+                report_computed_task=report_computed_task_from_provider,
             )
         serialized_ack_report_computed_task = dump(ack_report_computed_task, self.REQUESTOR_PRIVATE_KEY, CONCENT_PUBLIC_KEY)
 
@@ -241,14 +238,6 @@ class AuthReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
 
         self._test_400_response(
             response,
-            error_message = 'TaskToCompute messages are not identical. '
-                'There is a difference between messages with index 0 on passed list and with index {}'
-                'The difference is on field {}: {} is not equal {}'.format(
-                    1,
-                    'provider_id',
-                    'different_id',
-                    self.deserialized_task_to_compute.provider_id
-                ),
             error_code=ErrorCode.MESSAGES_NOT_IDENTICAL,
         )
 
@@ -259,11 +248,13 @@ class AuthReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
             self.REQUESTOR_PRIVATE_KEY,
         )
 
+        report_computed_task_from_provider = self._get_deserialized_report_computed_task(
+            timestamp="2017-12-01 10:55:00",
+            task_to_compute=self.deserialized_task_to_compute,
+        )
         with freeze_time("2017-12-01 11:00:05"):
             ack_report_computed_task = message.AckReportComputedTask(
-                report_computed_task = message.ReportComputedTask(
-                    task_to_compute = self.deserialized_task_to_compute,
-                )
+                report_computed_task=report_computed_task_from_provider
             )
         serialized_ack_report_computed_task = dump(ack_report_computed_task, self.REQUESTOR_PRIVATE_KEY, CONCENT_PUBLIC_KEY)
 

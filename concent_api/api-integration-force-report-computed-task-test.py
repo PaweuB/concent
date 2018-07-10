@@ -42,6 +42,7 @@ def ack_report_computed_task(task_to_compute):
     ack_report_computed_task = AckReportComputedTask()
     ack_report_computed_task.report_computed_task = ReportComputedTask()
     ack_report_computed_task.report_computed_task.task_to_compute = task_to_compute
+    sign_message(ack_report_computed_task.report_computed_task, PROVIDER_PRIVATE_KEY)
     return ack_report_computed_task
 
 

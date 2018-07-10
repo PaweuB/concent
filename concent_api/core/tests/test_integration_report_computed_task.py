@@ -165,17 +165,13 @@ class ReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
         self._assert_stored_message_counter_not_increased()
 
         # STEP 3: Requestor accepts computed task via Concent
-        report_computed_task_from_requestor = self._get_deserialized_report_computed_task(
-            timestamp = "2017-12-01 10:55:00",
-            task_to_compute = task_to_compute,
-        )
         serialized_ack_report_computed_task = self._get_serialized_ack_report_computed_task(
-            timestamp = "2017-12-01 11:00:05",
-            ack_report_computed_task = self._get_deserialized_ack_report_computed_task(
-                timestamp = "2017-12-01 11:00:05",
-                report_computed_task = report_computed_task_from_requestor,
+            timestamp="2017-12-01 11:00:05",
+            ack_report_computed_task=self._get_deserialized_ack_report_computed_task(
+                timestamp="2017-12-01 11:00:05",
+                report_computed_task=report_computed_task,
             ),
-            requestor_private_key = self.REQUESTOR_PRIVATE_KEY
+            requestor_private_key=self.REQUESTOR_PRIVATE_KEY
         )
 
         with freeze_time("2017-12-01 11:00:05"):
@@ -184,10 +180,10 @@ class ReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
                 data                           = serialized_ack_report_computed_task,
                 content_type                   = 'application/octet-stream',
             )
-        self._test_report_computed_task_in_database(report_computed_task_from_requestor)
+        self._test_report_computed_task_in_database(report_computed_task)
         self.assertEqual(response_3.status_code,  202)
         self.assertEqual(len(response_3.content), 0)
-        self._assert_stored_message_counter_increased(increased_by = 2)
+        self._assert_stored_message_counter_increased(increased_by=1)
         self._test_subtask_state(
             task_id                  = '1',
             subtask_id               = '8',
@@ -1064,14 +1060,13 @@ class ReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
         self._assert_stored_message_counter_not_increased()
 
         # STEP 3: Requestor accepts computed task via Concent
-
         serialized_ack_report_computed_task = self._get_serialized_ack_report_computed_task(
-            timestamp = "2017-12-01 11:00:05",
-            ack_report_computed_task = self._get_deserialized_ack_report_computed_task(
-                timestamp = "2017-12-01 11:00:05",
-                report_computed_task = report_computed_task,
+            timestamp="2017-12-01 11:00:05",
+            ack_report_computed_task=self._get_deserialized_ack_report_computed_task(
+                timestamp="2017-12-01 11:00:05",
+                report_computed_task=report_computed_task,
             ),
-            requestor_private_key = self.REQUESTOR_PRIVATE_KEY
+            requestor_private_key=self.REQUESTOR_PRIVATE_KEY
         )
 
         with freeze_time("2017-12-01 11:00:05"):
@@ -1083,7 +1078,7 @@ class ReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
 
         self.assertEqual(response_3.status_code,  202)
         self.assertEqual(len(response_3.content), 0)
-        self._assert_stored_message_counter_increased(increased_by = 1)
+        self._assert_stored_message_counter_increased(increased_by=1)
         self._test_subtask_state(
             task_id                  = '1',
             subtask_id               = '8',
@@ -2131,14 +2126,13 @@ class ReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
         self._assert_stored_message_counter_not_increased()
 
         # STEP 3: Requestor accepts computed task via Concent
-
         serialized_ack_report_computed_task = self._get_serialized_ack_report_computed_task(
-            timestamp = "2017-12-01 11:00:05",
-            ack_report_computed_task = self._get_deserialized_ack_report_computed_task(
-                timestamp       = "2017-12-01 11:00:05",
-                report_computed_task = report_computed_task,
+            timestamp="2017-12-01 11:00:05",
+            ack_report_computed_task=self._get_deserialized_ack_report_computed_task(
+                timestamp="2017-12-01 11:00:05",
+                report_computed_task=report_computed_task,
             ),
-            requestor_private_key = self.REQUESTOR_PRIVATE_KEY
+            requestor_private_key=self.REQUESTOR_PRIVATE_KEY
         )
 
         with freeze_time("2017-12-01 11:00:05"):
@@ -2150,7 +2144,7 @@ class ReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
 
         self.assertEqual(response_3.status_code,  202)
         self.assertEqual(len(response_3.content), 0)
-        self._assert_stored_message_counter_increased(increased_by = 1)
+        self._assert_stored_message_counter_increased(increased_by=1)
         self._test_subtask_state(
             task_id                  = '1',
             subtask_id               = '8',
@@ -2302,14 +2296,13 @@ class ReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
         self._assert_stored_message_counter_not_increased()
 
         # STEP 3: Requestor accepts computed task via Concent
-
         serialized_ack_report_computed_task = self._get_serialized_ack_report_computed_task(
-            timestamp = "2017-12-01 11:00:05",
-            ack_report_computed_task = self._get_deserialized_ack_report_computed_task(
-                timestamp       = "2017-12-01 11:00:05",
-                report_computed_task = report_computed_task,
+            timestamp="2017-12-01 11:00:05",
+            ack_report_computed_task=self._get_deserialized_ack_report_computed_task(
+                timestamp="2017-12-01 11:00:05",
+                report_computed_task=report_computed_task,
             ),
-            requestor_private_key = self.REQUESTOR_PRIVATE_KEY
+            requestor_private_key=self.REQUESTOR_PRIVATE_KEY
         )
 
         with freeze_time("2017-12-01 11:00:05"):
@@ -2321,7 +2314,7 @@ class ReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
 
         self.assertEqual(response_3.status_code,  202)
         self.assertEqual(len(response_3.content), 0)
-        self._assert_stored_message_counter_increased(increased_by = 1)
+        self._assert_stored_message_counter_increased(increased_by=1)
         self._test_subtask_state(
             task_id                  = '1',
             subtask_id               = '8',
@@ -2693,22 +2686,22 @@ class ReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
             deadline = "2017-12-01 11:00:00"
         )
 
-        report_computed_task_from_requestor = self._get_deserialized_report_computed_task(
-            timestamp = "2017-12-01 10:58:00",
-            task_to_compute = task_to_compute,
+        report_computed_task = self._get_deserialized_report_computed_task(
+            timestamp="2017-12-01 10:59:00",
+            task_to_compute=task_to_compute,
         )
-        report_computed_task_from_concent = self._get_deserialized_report_computed_task(
-            timestamp = "2017-12-01 10:59:00",
-            task_to_compute = task_to_compute,
+        different_report_computed_task = self._get_deserialized_report_computed_task(
+            timestamp="2017-12-01 10:58:00",
+            task_to_compute=task_to_compute,
         )
 
         serialized_force_report_computed_task = self._get_serialized_force_report_computed_task(
-            timestamp = "2017-12-01 10:59:00",
-            force_report_computed_task = self._get_deserialized_force_report_computed_task(
-                timestamp               = "2017-12-01 10:59:00",
-                report_computed_task    = report_computed_task_from_concent
+            timestamp="2017-12-01 10:59:00",
+            force_report_computed_task=self._get_deserialized_force_report_computed_task(
+                timestamp="2017-12-01 10:59:00",
+                report_computed_task=report_computed_task
             ),
-            provider_private_key = self.PROVIDER_PRIVATE_KEY
+            provider_private_key=self.PROVIDER_PRIVATE_KEY
         )
 
         with freeze_time("2017-12-01 10:59:00"):
@@ -2773,13 +2766,13 @@ class ReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
         # STEP 3: Requestor accepts computed task via Concent
 
         serialized_ack_report_computed_task = self._get_serialized_ack_report_computed_task(
-            timestamp = "2017-12-01 11:00:05",
-            ack_report_computed_task = self._get_deserialized_ack_report_computed_task(
-                timestamp = "2017-12-01 11:00:05",
-                subtask_id = '8',
-                report_computed_task = report_computed_task_from_requestor,
+            timestamp="2017-12-01 11:00:05",
+            ack_report_computed_task=self._get_deserialized_ack_report_computed_task(
+                timestamp="2017-12-01 11:00:05",
+                subtask_id='8',
+                report_computed_task=different_report_computed_task,
             ),
-            requestor_private_key = self.REQUESTOR_PRIVATE_KEY
+            requestor_private_key=self.REQUESTOR_PRIVATE_KEY
         )
 
         with freeze_time("2017-12-01 11:00:05"):
@@ -2789,7 +2782,7 @@ class ReportComputedTaskIntegrationTest(ConcentIntegrationTestCase):
                 content_type                   = 'application/octet-stream',
             )
 
-        self._test_report_computed_task_in_database(report_computed_task_from_requestor)
+        self._test_report_computed_task_in_database(different_report_computed_task)
         self.assertEqual(response_3.status_code,  202)
         self.assertEqual(len(response_3.content), 0)
         self._assert_stored_message_counter_increased(increased_by = 2)
