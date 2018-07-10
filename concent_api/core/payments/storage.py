@@ -23,13 +23,13 @@ class DatabaseTransactionsStorage():
     database using Django models.
     """
 
-    def __init__(self, *args: List, **kwargs: Dict) -> None:
+    def __init__(self, nonce: int, *args: List, **kwargs: Dict) -> None:
         super().__init__(*args, **kwargs)
 
         if not GlobalTransactionState.objects.filter(pk=0).exists():
             global_transaction_state = GlobalTransactionState(
                 pk=0,
-                nonce=core.payments.base.get_transaction_count(),
+                nonce=nonce,
             )
             global_transaction_state.full_clean()
             global_transaction_state.save()
