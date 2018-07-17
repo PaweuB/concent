@@ -18,7 +18,7 @@ from core.message_handlers import store_subtask
 from core.models                    import Client
 from core.models                    import StoredMessage
 from core.models                    import PendingResponse
-from core.tests.utils               import ConcentIntegrationTestCase
+from core.tests.utils import ConcentIntegrationTestCase
 from core.models                    import Subtask
 from common.constants               import ErrorCode
 from common.helpers                 import get_current_utc_timestamp
