@@ -45,12 +45,11 @@ def send(_request, client_message, client_public_key):
 
 
 # @provides_concent_feature('concent-api')
-# @csrf_exempt
-# @require_POST
-# @require_golem_message
+@csrf_exempt
+@require_POST
+@require_golem_message
 # @handle_errors_and_responses(database_name='control')
 # @log_communication
-@csrf_exempt
 def multiprocess_test_view(_request, client_message):
     print('start of view')
     subtask_id='1'
