@@ -50,7 +50,7 @@ def send(_request, client_message, client_public_key):
 @require_golem_message
 # @handle_errors_and_responses(database_name='control')
 # @log_communication
-def multiprocess_test_view(_request, client_message):
+def multiprocess_test_view(_request, client_message, client_public_key):
     print('start of view')
     subtask_id='1'
 
