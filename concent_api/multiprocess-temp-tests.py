@@ -58,38 +58,14 @@ def test_case_2d_send_correct_force_payment(cluster_consts, cluster_url, test_id
     # Test CASE 2D - Send correct ForcePayment
     current_time = get_current_utc_timestamp()
     (task_id, subtask_id) = get_task_id_and_subtask_id(test_id, '2D')
-    correct_force_payment = force_payment(
-        subtask_results_accepted_list=[
-            subtask_results_accepted(
-                payment_ts=current_time - cluster_consts.payment_due_time - AVERAGE_TIME_FOR_TWO_BLOCKS,
-
-                task_to_compute=create_signed_task_to_compute(
-                    timestamp=parse_timestamp_to_utc_datetime(current_time),
-                    task_id=task_id + 'a',
-                    subtask_id=subtask_id + 'A',
-                    deadline=current_time,
-                    price=1000,
-                )
-            ),
-            subtask_results_accepted(
-                payment_ts=current_time - cluster_consts.payment_due_time - AVERAGE_TIME_FOR_TWO_BLOCKS,
-                task_to_compute=create_signed_task_to_compute(
-                    timestamp=parse_timestamp_to_utc_datetime(current_time),
-                    task_id=task_id + 'b',
-                    subtask_id=subtask_id + 'B',
-                    deadline=current_time,
-                    price=1000,
-                )
-            )
-        ]
-    )
-    correct_force_payment.sig = None
+    data = 'client_test_string'
+    # correct_force_payment.sig = None
     api_request(
         cluster_url,
         'multiprocess_test_view',
         PROVIDER_PRIVATE_KEY,
         CONCENT_PUBLIC_KEY,
-        correct_force_payment,
+        data=data,
 
         headers={
             'Content-Type': 'application/octet-stream',
