@@ -1,6 +1,6 @@
 #!/bin/bash
 
-printf "[FLAKE8: concent_api, signing_service]\n"
+printf "[FLAKE8: concent_api, middleman_protocol, signing_service]\n"
 flake8                          \
     --exclude=local_settings.py \
     --jobs=4                    \
@@ -11,6 +11,10 @@ printf "[PYLINT: concent_api, signing_service]\n"
 # Find all subdirectories of our python apps and use xargs to pass them as arguments to pylint
 
 find concent_api/ -maxdepth 1 -mindepth 1 -type d \
+    | xargs pylint --rcfile=pylintrc
+printf "\n"
+
+find middleman_protocol/ -maxdepth 1 -mindepth 1 -type d \
     | xargs pylint --rcfile=pylintrc
 printf "\n"
 
