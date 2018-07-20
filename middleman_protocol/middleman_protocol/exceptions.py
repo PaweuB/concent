@@ -1,0 +1,4 @@
+
+
+class MiddlemanProtocolError(Exception):
+    pass
