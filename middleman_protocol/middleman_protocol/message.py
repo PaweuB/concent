@@ -1,3 +1,4 @@
+import codecs
 import sys
 from abc import ABC
 from abc import abstractclassmethod
@@ -63,8 +64,8 @@ class AbstractMiddlemanMessage(ABC):
         )(payload, request_id)
 
     @classmethod
-    def get_message_format(cls) -> Struct:
-        message_format = Struct(
+    def get_frame_format(cls) -> Struct:
+        return Struct(
             frame_signature=Bytes(64),  # TODO: How we gonna serialize
             signed_part_of_the_frame=Struct(
                 request_id=Int32ub,
@@ -72,39 +73,54 @@ class AbstractMiddlemanMessage(ABC):
                 payload_type=Enum(Byte, PayloadType),
                 payload=Prefixed(VarInt, GreedyBytes),
             ),
+        )
+
+    @classmethod
+    def get_message_format(cls) -> Struct:
+        return Struct(
+            frame=Prefixed(VarInt, GreedyBytes),
             frame_separator=Const(FRAME_SEPARATOR),
         )
-        return message_format
 
     @classmethod
     def deserialize(cls, raw_message):
+
+        # Parse message
         message_format = cls.get_message_format()
+        message = message_format.parse(raw_message)
 
-        deserialized_message = message_format.parse(raw_message)
+        # Parse frame
+        frame_unescaped, _ = codecs.escape_decode(message.frame)
+        frame_format = cls.get_frame_format()
+        frame = frame_format.parse(frame_unescaped)
 
-        cls._validate_signature(deserialized_message)
-        cls._validate_length(deserialized_message)
+        # Validate
+        cls._validate_signature(frame)
+        cls._validate_length(frame)
 
-        deserialized_payload = getattr(
+        # Get class related to current payload type
+        message_class = getattr(
             sys.modules[__name__],
             PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS[
-                PayloadType[str(deserialized_message.signed_part_of_the_frame.payload_type)]
+                PayloadType[str(frame.signed_part_of_the_frame.payload_type)]
             ]
-        )._deserialize_payload(deserialized_message.signed_part_of_the_frame.payload)
+        )
 
+        # Deserialize payload
+        deserialized_payload = message_class._deserialize_payload(frame.signed_part_of_the_frame.payload)
         return deserialized_payload
 
     @classmethod
-    def _validate_length(cls, message):
-        if not len(message.signed_part_of_the_frame.payload) == message.signed_part_of_the_frame.payload_length:
+    def _validate_length(cls, frame):
+        if not len(frame.signed_part_of_the_frame.payload) == frame.signed_part_of_the_frame.payload_length:
             raise MiddlemanProtocolError(
-                f'Deserialized message payload length is {len(message.signed_part_of_the_frame.payload)} '
-                f'instead of {message.signed_part_of_the_frame.payload_length}.'
+                f'Deserialized message payload length is {len(frame.signed_part_of_the_frame.payload)} '
+                f'instead of {frame.signed_part_of_the_frame.payload_length}.'
             )
 
     @classmethod
-    def _validate_signature(cls, message):
-        if not message.frame_signature:  # TODO: Really verify signature
+    def _validate_signature(cls, frame):
+        if not frame.frame_signature:  # TODO: Really verify signature
             raise MiddlemanProtocolError(
                 f'Deserialized message signature wrong.'
             )
@@ -112,31 +128,39 @@ class AbstractMiddlemanMessage(ABC):
     def serialize(self) -> bytes:
         assert isinstance(self.payload, bytes)
 
-        message_format = self.get_message_format()
+        frame_format = self.get_frame_format()
 
+        # Create and build part of the frame which will be signed
         signed_part_of_the_frame = Container(
             request_id=self.request_id,
             payload_length=len(self.payload),
             payload_type=self.payload_type,
             payload=self.payload,
         )
-
-        raw_signed_part_of_the_frame = message_format.signed_part_of_the_frame.build(
+        raw_signed_part_of_the_frame = frame_format.signed_part_of_the_frame.build(
             signed_part_of_the_frame
         )
 
+        # Create signature of part of the frame
         #frame_signature = sha256(raw_signed_part_of_the_frame).hexdigest().encode()  # TODO: TMP
-
         frame_signature = b'x' * 64
 
-        message = Container(
+        # Create frame with signature
+        frame = Container(
             frame_signature=frame_signature,
             signed_part_of_the_frame=signed_part_of_the_frame,
         )
+        raw_frame = frame_format.build(frame)
+        raw_frame_escaped, _ = codecs.escape_encode(raw_frame)
 
+        # Wrap frame in message
+        message_format = self.get_message_format()
+        message = Container(
+            frame=raw_frame_escaped,
+        )
         raw_message = message_format.build(message)
-        return raw_message
 
+        return raw_message
 
     def _validate_request_id(self, request_id):
         if not isinstance(request_id, int):
