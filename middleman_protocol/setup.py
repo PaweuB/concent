@@ -26,6 +26,14 @@ setup(
     ],
     package_data={},
     python_requires='>=3.6',
-    install_requires=[],
-    tests_require=[],
+    install_requires=[
+        'construct==2.9.45',
+        'golem_messages==2.10.1',
+        'mypy==0.610',
+    ],
+    tests_require=[
+        'mock==2.0.0',
+        'pytest==3.6.2'
+        'pytest-xdist==1.22.2',
+    ],
 )
