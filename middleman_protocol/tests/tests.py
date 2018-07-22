@@ -44,7 +44,7 @@ class TestInitMessagesFromMiddlemanProtocol:
         assertpy.assert_that(message.payload_type).is_equal_to(payload_type)
 
     def test_that_abstract_middleman_message_instantiation_should_raise_exception(self):
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(TypeError):
             AbstractMiddlemanMessage(
                 Ping(),
                 self.request_id,
