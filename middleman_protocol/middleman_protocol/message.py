@@ -1,4 +1,7 @@
 import sys
+from abc import ABC
+from abc import abstractclassmethod
+from abc import abstractmethod
 from hashlib import sha256
 
 from construct import Byte
@@ -21,7 +24,7 @@ from .constants import PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS
 from .exceptions import MiddlemanProtocolError
 
 
-class AbstractMiddlemanMessage:
+class AbstractMiddlemanMessage(ABC):
 
     __slots__ = [
         'payload',
@@ -30,16 +33,24 @@ class AbstractMiddlemanMessage:
     ]
 
     def __init__(self, payload, request_id):
-        if type(self) == AbstractMiddlemanMessage:
-            raise NotImplementedError(
-                'AbstractMiddlemanMessage cannot be instantiated directly.'
-            )
-
         self._validate_request_id(request_id)
         self.request_id = request_id
 
         self._validate_payload(payload)
         self.payload = self._serialize_payload(payload)
+
+    @classmethod
+    @abstractclassmethod
+    def _deserialize_payload(cls, payload):
+        pass
+
+    @abstractmethod
+    def _serialize_payload(self, payload):
+        pass
+
+    @abstractmethod
+    def _validate_payload(self, payload):
+        pass
 
     @classmethod
     def factory(cls, payload_type, payload, request_id):
@@ -84,10 +95,6 @@ class AbstractMiddlemanMessage:
         return deserialized_payload
 
     @classmethod
-    def _deserialize_payload(cls, payload):
-        return payload
-
-    @classmethod
     def _validate_length(cls, message):
         if not len(message.signed_part_of_the_frame.payload) == message.signed_part_of_the_frame.payload_length:
             raise MiddlemanProtocolError(
@@ -130,17 +137,12 @@ class AbstractMiddlemanMessage:
         raw_message = message_format.build(message)
         return raw_message
 
-    def _serialize_payload(self, payload):
-        return payload
 
     def _validate_request_id(self, request_id):
         if not isinstance(request_id, int):
             raise MiddlemanProtocolError(
                 f'request_id  is {type(request_id)} instead of int.'
             )
-
-    def _validate_payload(self, payload):
-        pass
 
 
 class GolemMessageMiddlemanMessage(AbstractMiddlemanMessage):
@@ -190,7 +192,27 @@ class AuthenticationChallengeMiddlemanMessage(AbstractMiddlemanMessage):
 
     payload_type = PayloadType.AUTHENTICATION_CHALLENGE
 
+    @classmethod
+    def _deserialize_payload(cls, payload: bytes) -> tuple:
+        return payload
+
+    def _serialize_payload(self, payload: tuple) -> bytes:
+        return payload
+
+    def _validate_payload(self, payload: tuple) -> None:
+        pass
+
 
 class AuthenticationResponseMiddlemanMessage(AbstractMiddlemanMessage):
 
     payload_type = PayloadType.AUTHENTICATION_RESPONSE
+
+    @classmethod
+    def _deserialize_payload(cls, payload: bytes) -> tuple:
+        return payload
+
+    def _serialize_payload(self, payload: tuple) -> bytes:
+        return payload
+
+    def _validate_payload(self, payload: tuple) -> None:
+        pass
