@@ -11,8 +11,10 @@ from construct import Const
 from construct import Container
 from construct import Enum
 from construct import GreedyBytes
+from construct import Int8ub
 from construct import Int16ub
 from construct import Int32ub
+from construct import PascalString
 from construct import Prefixed
 from construct import Struct
 from construct import VarInt
@@ -53,13 +55,6 @@ class AbstractMiddlemanMessage(ABC):
     @abstractmethod
     def _validate_payload(self, payload):
         pass
-
-    @classmethod
-    def factory(cls, payload_type, payload, request_id):
-        assert payload_type in PayloadType
-        assert payload_type in PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS
-
-        return PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS[payload_type](payload, request_id)
 
     @classmethod
     def get_frame_format(cls) -> Struct:
@@ -191,22 +186,47 @@ class ErrorMiddlemanMessage(AbstractMiddlemanMessage):
 
     @classmethod
     def _deserialize_payload(cls, payload: bytes) -> tuple:
-        return tuple(payload.decode().split('---'))
+        error_payload_format = cls.get_error_payload_format()
+        error_payload = error_payload_format.parse(payload)
+        return (error_payload.error_code, error_payload.error_message)
 
     def _serialize_payload(self, payload: tuple) -> bytes:
-        return ('---'.join(payload)).encode()
+        error_payload_format = self.get_error_payload_format()
+        error_payload = Container(
+            error_code=payload[0],
+            error_message=payload[1],
+        )
+        raw_error_payload = error_payload_format.build(error_payload)
+        return raw_error_payload
 
     def _validate_payload(self, payload: tuple) -> None:
         if not isinstance(payload, tuple):
             raise MiddlemanProtocolError(
                 f'Trying to create ErrorMiddlemanMessage but passed type payload is '
-                f'{type(payload)} instead of tuple.'
+                f'{type(payload)} instead of tuple. It must be pair of error code and error message.'
             )
         if len(payload) != 2:
             raise MiddlemanProtocolError(
                 f'Trying to create ErrorMiddlemanMessage but passed payload tuple has length '
-                f'{len(payload)} instead of 2.'
+                f'{len(payload)} instead of 2. It must be pair of error code and error message.'
             )
+        if not isinstance(payload[0], int):
+            raise MiddlemanProtocolError(
+                f'First element of payload tuple passed to ErrorMiddlemanMessage must be error code integer '
+                f'instead of {type(payload[0])}.'
+            )
+        if not isinstance(payload[1], str):
+            raise MiddlemanProtocolError(
+                f'Second element of payload tuple passed to ErrorMiddlemanMessage must be error message string '
+                f'instead of {type(payload[1])}.'
+            )
+
+    @classmethod
+    def get_error_payload_format(cls) -> Struct:
+        return Struct(
+            error_code=Int8ub,
+            error_message=PascalString(VarInt, 'utf8'),
+        )
 
 
 @register
