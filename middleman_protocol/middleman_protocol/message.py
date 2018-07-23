@@ -21,7 +21,8 @@ from golem_messages.message.base import Message as BaseGolemMessage
 
 from .constants import FRAME_SEPARATOR
 from .constants import PayloadType
-from .constants import PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS
+from .registry import PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS
+from .registry import register
 from .exceptions import MiddlemanProtocolError
 
 
@@ -56,12 +57,9 @@ class AbstractMiddlemanMessage(ABC):
     @classmethod
     def factory(cls, payload_type, payload, request_id):
         assert payload_type in PayloadType
-        assert hasattr(sys.modules[__name__], PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS[payload_type])
+        assert payload_type in PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS
 
-        return getattr(
-            sys.modules[__name__],
-            PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS[payload_type]
-        )(payload, request_id)
+        return PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS[payload_type](payload, request_id)
 
     @classmethod
     def get_frame_format(cls) -> Struct:
@@ -99,12 +97,9 @@ class AbstractMiddlemanMessage(ABC):
         cls._validate_length(frame)
 
         # Get class related to current payload type
-        message_class = getattr(
-            sys.modules[__name__],
-            PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS[
-                PayloadType[str(frame.signed_part_of_the_frame.payload_type)]
-            ]
-        )
+        message_class = PAYLOAD_TYPE_TO_MIDDLEMAN_MESSAGE_CLASS[
+            PayloadType[str(frame.signed_part_of_the_frame.payload_type)]
+        ]
 
         # Deserialize payload
         deserialized_payload = message_class._deserialize_payload(frame.signed_part_of_the_frame.payload)
@@ -169,6 +164,7 @@ class AbstractMiddlemanMessage(ABC):
             )
 
 
+@register
 class GolemMessageMiddlemanMessage(AbstractMiddlemanMessage):
 
     payload_type = PayloadType.GOLEM_MESSAGE
@@ -188,6 +184,7 @@ class GolemMessageMiddlemanMessage(AbstractMiddlemanMessage):
             )
 
 
+@register
 class ErrorMiddlemanMessage(AbstractMiddlemanMessage):
 
     payload_type = PayloadType.ERROR
@@ -212,6 +209,7 @@ class ErrorMiddlemanMessage(AbstractMiddlemanMessage):
             )
 
 
+@register
 class AuthenticationChallengeMiddlemanMessage(AbstractMiddlemanMessage):
 
     payload_type = PayloadType.AUTHENTICATION_CHALLENGE
@@ -227,6 +225,7 @@ class AuthenticationChallengeMiddlemanMessage(AbstractMiddlemanMessage):
         pass
 
 
+@register
 class AuthenticationResponseMiddlemanMessage(AbstractMiddlemanMessage):
 
     payload_type = PayloadType.AUTHENTICATION_RESPONSE
