@@ -1,5 +1,6 @@
 import datetime
 import copy
+import enum
 
 from base64 import b64encode
 from logging import getLogger
@@ -1483,3 +1484,25 @@ def validate_that_golem_messages_are_signed_with_key(
                 f'public key {public_key}.',
                 error_code=ErrorCode.MESSAGE_SIGNATURE_WRONG,
             )
+
+
+def validate_if_given_object_is_given_enum_instance(
+    custom_object: enum.Enum,
+    base_enum: type,
+    allow_none_as_instance: bool = False,
+) -> None:
+
+    if allow_none_as_instance is True and custom_object is None:
+        return
+
+    if allow_none_as_instance is False and custom_object is None:
+        raise Http400(
+            f'{custom_object} is None, it should be {base_enum} instance',
+            error_code=ErrorCode.MESSAGE_WRONG_FIELDS
+        )
+
+    if not isinstance(custom_object, base_enum):
+        raise Http400(
+            f'{custom_object} should be {base_enum} instance',
+            error_code=ErrorCode.MESSAGE_WRONG_FIELDS
+        )

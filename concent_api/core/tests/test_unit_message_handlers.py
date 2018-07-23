@@ -2,8 +2,13 @@ from unittest import TestCase
 
 from django.conf import settings
 from django.test import override_settings
+
+from common import constants
+from core.exceptions import Http400
 from core.message_handlers import are_items_unique
+from core.message_handlers import validate_if_given_object_is_given_enum_instance
 from core.message_handlers import store_subtask
+from core.models import PendingResponse
 from core.models import Subtask
 from core.tests.utils import ConcentIntegrationTestCase
 from core.tests.utils import parse_iso_date_to_timestamp
@@ -64,3 +69,24 @@ class TestMessagesStored(ConcentIntegrationTestCase):
             parse_iso_date_to_timestamp(subtask.report_computed_task.timestamp.isoformat()),
             parse_iso_date_to_timestamp(self.report_computed_task_timestamp)
         )
+
+
+class TestIfObjectIsEnumInstance(TestCase):
+
+    def test_that_validation_passes_if_correct_enum_instance_given(self):
+        validate_if_given_object_is_given_enum_instance(constants.ErrorCode.MESSAGE_INVALID, constants.ErrorCode)
+
+    def test_that_validation_raises_http400_if_string_given(self):
+        with self.assertRaises(Http400):
+            validate_if_given_object_is_given_enum_instance('any_string', constants.ErrorCode)
+
+    def test_that_validation_raises_http400_if_other_enum_given(self):
+        with self.assertRaises(Http400):
+            validate_if_given_object_is_given_enum_instance(constants.ErrorCode.MESSAGE_INVALID, PendingResponse.ResponseType)
+
+    def test_that_validation_raises_http400_if_none_given_and_none_not_allowed(self):
+        with self.assertRaises(Http400):
+            validate_if_given_object_is_given_enum_instance(None, PendingResponse.ResponseType)
+
+    def test_that_validation_passes_if_none_given_and_none_allowed(self):
+        validate_if_given_object_is_given_enum_instance(None, PendingResponse.ResponseType, True)
