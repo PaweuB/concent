@@ -230,6 +230,8 @@ def handle_send_reject_report_computed_task(client_message):
             error_code=ErrorCode.MESSAGE_INVALID,
         )
 
+    validate_if_given_object_is_given_enum_instance(client_message.reason, message.RejectReportComputedTask.REASON)
+
     # Validate if task_to_compute is valid instance of TaskToCompute.
     task_to_compute = client_message.task_to_compute
     validate_task_to_compute(task_to_compute)
@@ -273,6 +275,7 @@ def handle_send_reject_report_computed_task(client_message):
 
     # RejectReportComputedTask should contain empty cannot_compute_task and task_failure
     else:
+        assert client_message.reason == message.RejectReportComputedTask.REASON.SubtaskTimeLimitExceeded
         if client_message.cannot_compute_task is not None or client_message.task_failure is not None:
             raise Http400(
                 "RejectReportComputedTask requires empty 'cannot_compute_task' and 'task_failure' with {} reason.".format(

@@ -73,7 +73,7 @@ class TestMessagesStored(ConcentIntegrationTestCase):
 
 class TestIfObjectIsEnumInstance(TestCase):
 
-    def test_that_validation_passes_if_correct_enum_instance_given(self):
+    def test_that_validation_passes_if_correct_enum_instance_given(self):  # pylint: disable=no-self-use
         validate_if_given_object_is_given_enum_instance(constants.ErrorCode.MESSAGE_INVALID, constants.ErrorCode)
 
     def test_that_validation_raises_http400_if_string_given(self):
@@ -88,5 +88,5 @@ class TestIfObjectIsEnumInstance(TestCase):
         with self.assertRaises(Http400):
             validate_if_given_object_is_given_enum_instance(None, PendingResponse.ResponseType)
 
-    def test_that_validation_passes_if_none_given_and_none_allowed(self):
+    def test_that_validation_passes_if_none_given_and_none_allowed(self):  # pylint: disable=no-self-use
         validate_if_given_object_is_given_enum_instance(None, PendingResponse.ResponseType, True)
