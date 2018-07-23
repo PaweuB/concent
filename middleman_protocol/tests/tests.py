@@ -16,6 +16,7 @@ from middleman_protocol.message import AuthenticationChallengeMiddlemanMessage
 from middleman_protocol.message import AuthenticationResponseMiddlemanMessage
 from middleman_protocol.message import ErrorMiddlemanMessage
 from middleman_protocol.message import GolemMessageMiddlemanMessage
+from middleman_protocol.utils import create_middleman_protocol_message
 
 
 class TestInitMessagesFromMiddlemanProtocol:
@@ -24,17 +25,17 @@ class TestInitMessagesFromMiddlemanProtocol:
 
     @pytest.mark.parametrize(('expected_middleman_message_type', 'payload_type', 'payload'), [
         (GolemMessageMiddlemanMessage,            PayloadType.GOLEM_MESSAGE,            Ping()),
-        (ErrorMiddlemanMessage,                   PayloadType.ERROR,                    ('error_message', 'error.code')),
+        (ErrorMiddlemanMessage,                   PayloadType.ERROR,                    (111, 'error_message')),
         (AuthenticationChallengeMiddlemanMessage, PayloadType.AUTHENTICATION_CHALLENGE, b'random_bytes'),
         (AuthenticationResponseMiddlemanMessage,  PayloadType.AUTHENTICATION_RESPONSE,  b'TODO'),
     ])  # pylint: disable=no-self-use
-    def test_that_abstract_middleman_message_factory_with_different_payload_types_should_create_proper_middleman_message(
+    def test_that_create_middleman_protocol_message_with_various_payload_types_should_create_proper_middleman_message(
         self,
         expected_middleman_message_type,
         payload_type,
         payload,
     ):
-        message = AbstractMiddlemanMessage.factory(
+        message = create_middleman_protocol_message(
             payload_type,
             payload,
             self.request_id,
@@ -57,7 +58,7 @@ class TestSerializeMessagesFromMiddlemanProtocol:
 
     @pytest.mark.parametrize(('middleman_message_type', 'payload'), [
         (GolemMessageMiddlemanMessage,            Ping()),
-        (ErrorMiddlemanMessage,                   ('error_message', 'error.code')),
+        (ErrorMiddlemanMessage,                   (111, 'error_message')),
         (AuthenticationChallengeMiddlemanMessage, b'random_bytes'),
         (AuthenticationResponseMiddlemanMessage,  b'TODO'),
     ])  # pylint: disable=no-self-use
@@ -80,7 +81,7 @@ class TestTransferMessagesFromMiddlemanProtocol:
 
     @pytest.mark.parametrize(('middleman_message_type', 'payload'), [
         (GolemMessageMiddlemanMessage,            Ping()),
-        (ErrorMiddlemanMessage,                   ('error_message', 'error.code')),
+        (ErrorMiddlemanMessage,                   (111, 'error_message')),
         (AuthenticationChallengeMiddlemanMessage, b'random_bytes'),
         (AuthenticationResponseMiddlemanMessage,  b'TODO'),
     ])  # pylint: disable=no-self-use
